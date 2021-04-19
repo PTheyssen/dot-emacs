@@ -11,7 +11,6 @@
              (garbage-collect)) t)
 
 
-
 ;; initial buffer choice
 (setq initial-buffer-choice "~/org/gtd.org")
 
@@ -30,6 +29,11 @@
 
 ;; Highlight current line
 (global-hl-line-mode 1)
+
+
+;; highlight todos
+;; "TODO", "FIXME", "DEBUG"
+;(global-hl-todo-mode 1)
 
 ;; hide menu-bar and tool-bar
 (menu-bar-mode -1)
@@ -113,7 +117,13 @@
   (comment-or-uncomment-region (line-beginning-position) (line-end-position)))
 
 ;; keymaps
+(global-set-key "\M-k" '(lambda () (interactive) (kill-line 0)) ) ;M-k kills to the left
+(global-set-key (kbd "C-x C-n") 'writeroom-increase-width)
+(global-set-key (kbd "C-c r") 'query-replace-regexp)
+(global-set-key (kbd "C-c l") 'org-cliplink)
 (global-set-key (kbd "C-.") 'toggle-comment-on-line)
+(global-set-key (kbd "C-c d") 'dictcc)
+(global-set-key (kbd "C-x p") 'dictcc-at-point)
 (global-set-key (kbd "C-c f") 'org-roam-find-file)
 (global-set-key (kbd "C-c i") 'org-roam-insert)
 (global-set-key (kbd "C-.") 'toggle-comment-on-line)
@@ -131,6 +141,7 @@
 (global-set-key (kbd "M-h") 'backward-kill-word)
 (global-set-key (kbd "C-?") 'help-command)
 (global-set-key (kbd "M-i") 'imenu)
+(global-set-key (kbd "C-c s") 'ispell)
 ;; increment and decrement numbers
 (global-set-key (kbd "C-c +") 'evil-numbers/inc-at-pt)
 (global-set-key (kbd "C-c -") 'evil-numbers/dec-at-pt)
@@ -143,6 +154,9 @@
 ;; agenda
 (global-set-key (kbd "C-c a") 'org-agenda)
 
+;; projectile keybindings
+(global-set-key (kbd "C-c p") 'projectile-command-map)
+
 
 ;(define-key pdf-view-mode-map (kbd "k") 'nil)
 ;(define-key pdf-view-mode-map (kbd "j") 'pdf-view-next-line-or-next-page) ; remove killing buffer
@@ -153,6 +167,8 @@
 ;;scroll window up/down by one line
 (global-set-key (kbd "M-n") (kbd "C-u 1 C-v"))
 (global-set-key (kbd "M-p") (kbd "C-u 1 M-v"))
+
+
 
 ;;--------------------------------------------------------------------
 ;; fix downloading from gnu archive
@@ -188,7 +204,10 @@
     ;; customizations/navigation.el line 23 for a description
     ;; of ido
     ido-completing-read+
-
+    
+    ;; flex matching for ido
+    flx-ido
+    
     ;; Enhances M-x to allow easier execution of commands. Provides
     ;; a filterable list of possible commands in the minibuffer
     ;; http://www.emacswiki.org/emacs/Smex
@@ -217,6 +236,8 @@
 
     ;; git integration
     magit
+    magit-todos
+    hl-todo
 
     ;; code snippet completion
     yasnippet
@@ -280,20 +301,14 @@
 ;; Note: The customize interface is also supported.
 (setq rmh-elfeed-org-files (list "~/org/elfeed.org"))
 
-
 ;;--------------------------------------------------------------------
 ;; package config
-
-;; ido-mode allows you to more easily navigate choices. For example,
-;; when you want to switch buffers, ido presents you with a list
-;; of buffers in the the mini-buffer. As you start to type a buffer's
-;; name, ido will narrow down the list of buffers to match the text
-;; you've typed in
-;; http://www.emacswiki.org/emacs/InteractivelyDoThings
-(ido-mode t)
-
-;; This allows partial matches, e.g. "tl" will match "Tyrion Lannister"
+(ido-mode 1)
+(ido-everywhere 1)
+(flx-ido-mode 1)
+;; disable ido faces to see flx highlights.
 (setq ido-enable-flex-matching t)
+(setq ido-use-faces nil)
 
 ;; Turn this behavior off because it's annoying
 (setq ido-use-filename-at-point nil)
@@ -332,10 +347,26 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(TeX-source-correlate-mode t)
+ '(TeX-view-program-list nil)
+ '(TeX-view-program-selection
+   (quote
+    ((output-pdf "Zathura")
+     ((output-dvi has-no-display-manager)
+      "dvi2tty")
+     ((output-dvi style-pstricks)
+      "dvips and gv")
+     (output-dvi "xdvi")
+     (output-pdf "Evince")
+     (output-html "xdg-open"))))
+ '(custom-enabled-themes (quote (leuven)))
  '(org-agenda-files (quote ("~/org/gtd.org")))
+ '(org-modules
+   (quote
+    (org-habit org-w3m org-bbdb org-bibtex org-docview org-gnus org-info org-irc org-mhe org-rmail)))
  '(package-selected-packages
    (quote
-    (helm-unicode tramp anki-editor use-package dictcc zetteldeft yasnippet-snippets yasnippet-classic-snippets yaml-mode which-key terminal-here tagedit smex slime-repl slim-mode skewer-mode rust-mode rainbow-delimiters projectile plantuml-mode paredit org-roam org-ref org-gcal org-cliplink magit lsp-mode ledger-mode julia-mode ido-completing-read+ haskell-mode graphviz-dot-mode geiser folding flycheck ein company clojure-mode-extra-font-locking cider auto-dictionary auctex))))
+    (dart-mode csv-mode emms go-mode typescript-mode magit-todos flx-ido helm-unicode tramp anki-editor use-package dictcc zetteldeft yasnippet-snippets yasnippet-classic-snippets yaml-mode which-key terminal-here tagedit smex slime-repl slim-mode skewer-mode rust-mode rainbow-delimiters projectile plantuml-mode paredit org-roam org-ref org-gcal org-cliplink magit lsp-mode ledger-mode julia-mode ido-completing-read+ haskell-mode graphviz-dot-mode geiser folding flycheck ein company clojure-mode-extra-font-locking cider auto-dictionary auctex))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -346,31 +377,74 @@
 
 ;; set org capture template
 (setq org-capture-templates
-      '(("t" "Todo" entry (file+headline "~/org/gtd.org" "Tasks")
+      '(("t" "Todo" entry (file+headline "~/org/gtd.org" "Inbox")
          "* %?")))
 
 ;; set org capture template
 (add-to-list 'org-capture-templates
              '("m" "media inbox"
                entry
-               (file+headline "~/org/gtd.org" "media inbox")
+               (file+headline "~/org/gtd.org" "Media Inbox")
                "* %?"))
 
-
-;; Org-capture templates
-(setq org-my-anki-file "~/gtd/anki.org")
 (add-to-list 'org-capture-templates
-             '("a" "Anki basic"
+             '("a" "anki inbox"
                entry
-               (file+headline org-my-anki-file "Anki card inbox")
-               "* %T \n:PROPERTIES:\n:ANKI_NOTE_TYPE: org-Basic\n:ANKI_DECK: MEGA\n:END:\n** Front\n%?\n** Back\n"))
+               (file+headline "~/org/gtd.org" "Anki inbox")
+               "* %?"))
 (add-to-list 'org-capture-templates
-             '("r" "Anki incremental reading"
+             '("f" "food tracking"
                entry
-               (file+headline org-my-anki-file "Anki card inbox")
-               "* %T \n:PROPERTIES:\n:ANKI_NOTE_TYPE: org-Basic\n:ANKI_DECK: inc_reading\n:END:\n** Front\n%?\n** Back\n"))
-
-
+               (file+headline "~/org/quantified_self.org" "Daily Food")
+               "* %t %?"))
+(add-to-list 'org-capture-templates
+             '("w" "body Weight tracking"
+               entry
+               (file+headline "~/org/quantified_self.org" "Body weight")
+               "* %t %?"))
+(add-to-list 'org-capture-templates
+             '("h" "Happiness + General well-being"
+               entry
+               (file+headline "~/org/quantified_self.org" "Happiness + General well-being")
+               "* %t \n %?"))
+(add-to-list 'org-capture-templates
+             '("g" "Gratitude"
+               entry
+               (file "~/org/gratitude.org")
+               "* %t \n %?"))
 
 ;; fix org-mode
 (org-reload)
+
+(require 'emms-setup)
+     (emms-all)
+(emms-default-players)
+(setq emms-player-list '(emms-player-mpv))
+(setq emms-source-file-default-directory "/home/philipp/media/music/")
+
+
+(defun yank-buffer ()
+ "Nonce function"
+ (interactive)
+ (kill-new buffer-file-name))
+
+;; moving files with dired
+(setq dired-dwim-target t)
+
+
+;; stop projectile from slowing down tramp
+(defadvice projectile-on (around exlude-tramp activate)
+  "This should disable projectile when visiting a remote file"
+  (unless  (--any? (and it (file-remote-p it))
+                   (list
+                    (buffer-file-name)
+                    list-buffers-directory
+                    default-directory
+                    dired-directory))
+    ad-do-it))
+
+(setq projectile-mode-line "Projectile")
+
+(defun insert-date()
+  (interactive)
+  (insert (shell-command-to-string "date +\"%d.%m.%Y %k:%M\"")))
