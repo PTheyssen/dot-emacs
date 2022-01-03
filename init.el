@@ -1,28 +1,75 @@
-;;; init.el
+;;; init.el  -*- lexical-binding: t; -*-
 
-;;; Bootstrap
-;; Speed up startup
-(setq gc-cons-threshold 402653184
-      gc-cons-percentage 0.6)
-(add-hook 'after-init-hook
-          `(lambda ()
-             (setq gc-cons-threshold 800000
-                   gc-cons-percentage 0.1)
-             (garbage-collect)) t)
+;; First set the package-archives URLs
+
+;; Added by Package.el.  This must come before configurations of
+;; installed packages.  Don't delete this line.  If you don't want it,
+;; just comment it out by adding a semicolon to the start of the line.
+;; You may delete these explanatory comments.
+(package-initialize)
+
+(eval-when-compile
+  (setq package-archives
+	'(("gnu" . "http://elpa.gnu.org/packages/")
+	  ("nongnu" . "http://elpa.nongnu.org/nongnu/")
+	  ("melpa" . "http://melpa.org/packages/")))
+  (require 'use-package))
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+(eval-and-compile
+  (setq use-package-always-ensure t
+        use-package-expand-minimally t))
+
+;; Precompute activation actions to speed up startup
+;; (setq package-quickstart t)
+
+;; fix warnings: "cl package deprecated
+(setq byte-compile-warnings '(cl-functions))
+
+;; TODO: Load my customization file, for my own functions etc.
+;; (setq custom-file "/home/philipp/.emacs.d/emacs-custom.el")
+;; (load custom-file)
+
+
+;; Load my favorite theme
+;; (load-theme 'doom-nord t)
+(load-theme 'leuven t)
+;; (load-theme 'doom-moonlight t)
+
+;; Start server to use emacsclient
+;; (server-start)
+
+
+;; Who I am
+(setq user-full-name "Philipp")
+(setq user-mail-address "p.theyssen@gmail.com")
+
+;; Let's get a backtrace when errors are
+(setq debug-on-error t)
+
+;; Display byte-compiler warnings on error
+(setq byte-compile-debug t)
+
+
+;; Stop polluting the directory with auto-saved files and backup
+(setq auto-save-default nil)
+(setq make-backup-files nil)
+(setq auto-save-list-file-prefix nil)
+
+
+;; Always use "y" for "yes"
+(fset 'yes-or-no-p 'y-or-n-p)
+
+;;;;;;;;;;;;;;;;; my own config
 
 
 ;; initial buffer choice
-(setq initial-buffer-choice "~/org/gtd.org")
-
-;;; general config
-;; move with SHIFT-arrow
-(windmove-default-keybindings)
-
-;; theme
-(load-theme 'leuven t)
+(setq initial-buffer-choice "~/Nextcloud/org/gtd.org")
 
 ;; set font size
-(set-face-attribute 'default nil :height 120)
+(set-face-attribute 'default nil :height 110)
 
 ;; Highlights matching parenthesis
 (show-paren-mode 1)
@@ -30,27 +77,29 @@
 ;; Highlight current line
 (global-hl-line-mode 1)
 
-
-;; highlight todos
-;; "TODO", "FIXME", "DEBUG"
-;(global-hl-todo-mode 1)
-
 ;; hide menu-bar and tool-bar
 (menu-bar-mode -1)
 (tool-bar-mode -1)
+(show-paren-mode 1)
+(auto-insert-mode 1)
+(display-time-mode 1)
+(tooltip-mode -1)
+(blink-cursor-mode -1)
+(scroll-bar-mode -1)
+(pixel-scroll-mode 1)
 
-;; Emacs can automatically create backup files. This tells Emacs to
-;; put all backups in ~/.emacs.d/backups. More info:
-;; http://www.gnu.org/software/emacs/manual/html_node/elisp/Backup-Files.html
-(setq backup-directory-alist `(("." . ,(concat user-emacs-directory
-                                               "backups"))))
+
+;; configure modeline
+(display-time-mode -1)
+
+
+;; Stop polluting the directory with auto-saved files and backup
 (setq auto-save-default nil)
+(setq make-backup-files nil)
+(setq auto-save-list-file-prefix nil)
 
 ;; do not show line numbers
 (global-linum-mode -1)
-
-;; No cursor blinking, it's distracting
-(blink-cursor-mode 0)
 
 ;; no bell
 (setq ring-bell-function 'ignore)
@@ -60,9 +109,6 @@
 
 ;; Changes all yes/no questions to y/n type
 (fset 'yes-or-no-p 'y-or-n-p)
-
-;; No need for ~ files when editing
-(setq create-lockfiles nil)
 
 ;; Go straight to scratch buffer on startup
 (setq inhibit-startup-message t)
@@ -88,6 +134,7 @@
       ;; Mouse yank commands yank at point instead of at click.
       mouse-yank-at-point t)
 
+
 ;; Turn on recent file mode so that you can more easily switch to
 ;; recently edited files when you first start emacs
 (setq recentf-save-file (concat user-emacs-directory ".recentf"))
@@ -95,20 +142,6 @@
 (recentf-mode 1)
 (setq recentf-max-menu-items 40)
 
-;; org mode use speed commands when on star
-(setq org-use-speed-commands
-      (lambda () (and (looking-at org-outline-regexp) (looking-back "^\**"))))
-
-;; set location for org capture
-(setq org-directory "~/org")
-(setq org-default-notes-file (concat org-directory "/gtd.org"))
-
-;; enable languages for org babel
-(org-babel-do-load-languages
-  'org-babel-load-languages
-  '((emacs-lisp . t)
-    (R . t)
-    (python . t)))
 
 ;; function for toggle comments
 (defun toggle-comment-on-line ()
@@ -116,12 +149,16 @@
   (interactive)
   (comment-or-uncomment-region (line-beginning-position) (line-end-position)))
 
+;; Trigger completion on Shift-Space
+(global-set-key (kbd "S-SPC") #'company-complete)
+
 ;; keymaps
-(global-set-key "\M-k" '(lambda () (interactive) (kill-line 0)) ) ;M-k kills to the left
-(global-set-key (kbd "C-x C-n") 'writeroom-increase-width)
+;; Unset C-z which is bound to `suspend-frame' by default
+(global-unset-key (kbd "C-z"))
+(global-set-key "\M-k" (lambda () (interactive) (kill-line 0)) ) ;M-k kills to the left
 (global-set-key (kbd "C-c r") 'query-replace-regexp)
+(global-set-key (kbd "C-c e") 'eww)
 (global-set-key (kbd "C-c l") 'org-cliplink)
-(global-set-key (kbd "C-.") 'toggle-comment-on-line)
 (global-set-key (kbd "C-c d") 'dictcc)
 (global-set-key (kbd "C-x p") 'dictcc-at-point)
 (global-set-key (kbd "C-c f") 'org-roam-find-file)
@@ -136,173 +173,174 @@
 (global-set-key (kbd "C-x g") 'magit-status)
 (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup)
 (global-set-key (kbd "C-c v") 'visual-line-mode)
+(global-set-key (kbd "C-c u") 'unipoint-insert)
+(global-set-key (kbd "C-c c") 'org-capture)
 (global-set-key (kbd "C-c c") 'org-capture)
 (global-set-key (kbd "C-h") 'delete-backward-char)
 (global-set-key (kbd "M-h") 'backward-kill-word)
 (global-set-key (kbd "C-?") 'help-command)
 (global-set-key (kbd "M-i") 'imenu)
 (global-set-key (kbd "C-c s") 'ispell)
-;; increment and decrement numbers
-(global-set-key (kbd "C-c +") 'evil-numbers/inc-at-pt)
-(global-set-key (kbd "C-c -") 'evil-numbers/dec-at-pt)
-;; set key bindings
 (global-set-key (kbd "<f12>") 'terminal-here)
-(global-set-key (kbd "<f9>") 'dictcc)
-(global-set-key (kbd "<f6>") 'writeroom-mode)
-;; recompile command
 (global-set-key (kbd "<f5>") 'recompile)
-;; agenda
 (global-set-key (kbd "C-c a") 'org-agenda)
-
-;; projectile keybindings
 (global-set-key (kbd "C-c p") 'projectile-command-map)
-
-
-;(define-key pdf-view-mode-map (kbd "k") 'nil)
-;(define-key pdf-view-mode-map (kbd "j") 'pdf-view-next-line-or-next-page) ; remove killing buffer
-;(define-key pdf-view-mode-map (kbd "k") 'pdf-view-previous-line-or-previous-page) ; remove killing buffer
-
-;;keep cursor at same position when scrolling
 (setq scroll-preserve-screen-position 1)
-;;scroll window up/down by one line
 (global-set-key (kbd "M-n") (kbd "C-u 1 C-v"))
 (global-set-key (kbd "M-p") (kbd "C-u 1 M-v"))
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+(global-set-key (kbd "C-x c") 'helm-command-prefix-key)
+(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+(global-set-key (kbd "M-q") 'ace-window)
+(global-set-key (kbd "<f11>") 'shell)
+(global-set-key (kbd "<f9>") 'delete-trailing-whitespace)
+(global-set-key (kbd "<f10>") 'org-agenda)
+(global-set-key (kbd "<f8>") 'deft)
+(global-set-key (kbd "C-c b") 'open-org)
+(global-set-key (kbd "C-c z") 'open-zathura)
 
 
+;; dired mode key bindings https://stackoverflow.com/questions/24567313/remap-key-bindings-for-dired-mode
+(global-set-key (kbd "<dead-circumflex>") 'dired-up-directory)
 
-;;--------------------------------------------------------------------
-;; fix downloading from gnu archive
-(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+;; Move more quickly
+(global-set-key (kbd "C-S-n")
+                (lambda ()
+                  (interactive)
+                  (ignore-errors (next-line 5))))
 
-;; Initialize package.el
-(require 'package)
-(add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/"))
-(package-initialize)
+(global-set-key (kbd "C-S-p")
+                (lambda ()
+                  (interactive)
+                  (ignore-errors (previous-line 5))))
 
-;; packages
-;; Load and activate emacs packages. Do this first so that the
-;; packages are loaded before you start trying to modify them.
-;; This also sets the load path.
-(package-initialize)
+(global-set-key (kbd "C-S-f")
+                (lambda ()
+                  (interactive)
+                  (ignore-errors (forward-char 5))))
 
-;; Download the ELPA archive description if needed.
-;; This informs Emacs about the latest versions of all packages, and
-;; makes them available for download.
-(when (not package-archive-contents)
-  (package-refresh-contents))
+(global-set-key (kbd "C-S-b")
+                (lambda ()
+                  (interactive)
+                  (ignore-errors (backward-char 5))))
 
+(defun open-org ()
+  (interactive)
+  (find-file "/home/pt/Nextcloud/org/gtd.org"))
 
-(defvar my-packages
-  '(;; makes handling lisp expressions much, much easier
-    ;; Cheatsheet: http://www.emacswiki.org/emacs/PareditCheatsheet
-    paredit
+;;;; package
+(use-package smex)
+(use-package multiple-cursors
+  :config
+  (global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines))
+(use-package ido-completing-read+)
+(use-package flx-ido)
+;; (global-set-key (kbd "M-o") 'mode-line-other-buffer)
+(use-package bind-key
+  :config
+  (bind-key* "M-q" 'ace-window))
+(use-package whole-line-or-region
+  :config
+  (whole-line-or-region-global-mode 1))
+(use-package projectile)
+(use-package org-cliplink)
+(use-package terminal-here)
+;; (use-package org-roam
+  ;; :config
+  ;; (setq org-roam-directory "~/org/org-roam")
+  ;; (add-hook 'after-init-hook 'org-roam-mode)
+  ;; )
 
-    use-package
+(use-package magit)
+(use-package yasnippet)
+(use-package yasnippet-classic-snippets)
+(use-package yasnippet-snippets)
+(use-package helm)
+(use-package tramp)
+(use-package ein
+  :config
+  (setq ein:output-area-inlined-images t))
+(use-package memento-mori)
+(use-package haskell-mode)
+(use-package rust-mode)
+(use-package yaml-mode)
+(use-package julia-mode)
+(use-package markdown-mode)
+(use-package spray)
+(use-package dictcc)
+(use-package ess)
+(use-package deft
+  :config
+  (setq deft-extensions '("org" "txt"))
+  (setq deft-use-filter-string-for-filename t)
+  (setq deft-directory "~/Nextcloud/org/deft_notes"))
+(use-package doom-themes)
+(use-package company)
+(use-package ace-window)
+(use-package ace-jump-mode)
+(use-package which-key)
+(use-package volatile-highlights)
+(use-package plantuml-mode)
+(use-package ido-completing-read+)
 
-    ;; allow ido usage in as many contexts as possible. see
-    ;; customizations/navigation.el line 23 for a description
-    ;; of ido
-    ido-completing-read+
-    
-    ;; flex matching for ido
-    flx-ido
-    
-    ;; Enhances M-x to allow easier execution of commands. Provides
-    ;; a filterable list of possible commands in the minibuffer
-    ;; http://www.emacswiki.org/emacs/Smex
-    smex
+(use-package pomidor
+  :config
+  (setq pomidor-seconds (* 25 60)) ; 25 minutes for the work period
+  (setq pomidor-break-seconds (* 5 60)) ; 5 minutes break time
+  (setq pomidor-sound-tick nil)
+  (setq pomidor-sound-tack nil) 
+)
 
-    ;; use C-w to kill current line
-    whole-line-or-region
-
-    ;; project navigation
-    projectile
-
-    ;; latex editing
-    auctex
-
-    ;; note taking ui
-    deft
-
-    ;; pretty links in org files
-    org-cliplink
-
-    ;; open terminal at current location
-    terminal-here
-
-    ;; zettelkasten
-    org-roam
-
-    ;; git integration
-    magit
-    magit-todos
-    hl-todo
-
-    ;; code snippet completion
-    yasnippet
-    yasnippet-classic-snippets
-    yasnippet-snippets
-
-    ;; filter-as-you-type completion
-    helm
-
-    ;; for focused writing
-    writeroom-mode
-
-    ;; highlight changes
-    volatile-highlights
-
-    ;; remote access
-    tramp
-
-    ;; feed reader
-    elfeed
-    elfeed-org
-
-    ;; jupyter notebooks in emacs
-    ein
-    
-    ;; editing modes
-    haskell-mode
-    rust-mode
-    yaml-mode
-    julia-mode
-    markdown-mode))
-
-(dolist (p my-packages)
-  (when (not (package-installed-p p))
-    (package-install p)))
-
+;; pdf-tools
+(pdf-loader-install)
 
 ;; hooks
-(add-hook 'after-init-hook 'org-roam-mode)
+;; (add-hook 'after-init-hook 'org-roam-mode)
 (add-hook 'after-init-hook 'yas-global-mode)
 (add-hook 'after-init-hook 'visual-line-mode)
 (add-hook 'after-init-hook 'column-number-mode)
 (add-hook 'after-init-hook 'winner-mode)
 (add-hook 'after-init-hook 'whole-line-or-region-global-mode)
-;; pdf-tools
-(pdf-loader-install)
 
-;; config for deft
-(setq deft-default-extension "org")
+;; Enhances M-x to allow easier execution of commands. Provides
+;; a filterable list of possible commands in the minibuffer
+;; http://www.emacswiki.org/emacs/Smex
+(setq smex-save-file (concat user-emacs-directory ".smex-items"))
+(smex-initialize)
 
-;; Load elfeed-org
-(require 'elfeed-org)
 
-;; Initialize elfeed-org
-;; This hooks up elfeed-org to read the configuration when elfeed
-;; is started with =M-x elfeed=
-(elfeed-org)
+;; moving files with dired
+(setq dired-dwim-target t)
 
-;; Optionally specify a number of files containing elfeed
-;; configuration. If not set then the location below is used.
-;; Note: The customize interface is also supported.
-(setq rmh-elfeed-org-files (list "~/org/elfeed.org"))
 
-;;--------------------------------------------------------------------
-;; package config
+;; stop projectile from slowing down tramp
+(defadvice projectile-on (around exlude-tramp activate)
+  "This should disable projectile when visiting a remote file"
+  (unless  (--any? (and it (file-remote-p it))
+                   (list
+                    (buffer-file-name)
+                    list-buffers-directory
+                    default-directory
+                    dired-directory))
+    ad-do-it))
+
+(setq projectile-mode-line "Projectile")
+
+
+(defun insert-date()
+  (interactive)
+  (insert
+   (concat "# " (shell-command-to-string "date +\"%d.%m.%Y %k:%M\""))))
+
+
+;; README via pandoc + github css style
+(add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
+(setq markdown-command "pandoc -c file:///home/philipp/.emacs.d/github-pandoc.css --from gfm -t html5 --mathjax --highlight-style pygments --standalone")
+
+
+(setq memento-mori-birth-date "1998-03-01")
+(memento-mori-mode)
+
 (ido-mode 1)
 (ido-everywhere 1)
 (flx-ido-mode 1)
@@ -327,124 +365,80 @@
 (ido-ubiquitous-mode t)
 (ido-everywhere t)
 
-;; Shows a list of buffers
-(global-set-key (kbd "C-x C-b") 'ibuffer)
+;;;;;;;;;;;;;;;; org mode ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'helm-config)
+;; org mode use speed commands when on star
+(setq org-use-speed-commands
+      (lambda () (and (looking-at org-outline-regexp) (looking-back "^\**"))))
 
 
-;; Enhances M-x to allow easier execution of commands. Provides
-;; a filterable list of possible commands in the minibuffer
-;; http://www.emacswiki.org/emacs/Smex
-(setq smex-save-file (concat user-emacs-directory ".smex-items"))
-(smex-initialize)
-(global-set-key (kbd "M-x") 'smex)
+;; set location for org capture
+(setq org-directory "~/Nextcloud/org")
+(setq org-default-notes-file (concat org-directory "/gtd.org"))
+(setq org-startup-folded t)
 
-;; projectile everywhere!
-(projectile-global-mode)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(TeX-source-correlate-mode t)
- '(TeX-view-program-list nil)
- '(TeX-view-program-selection
-   (quote
-    ((output-pdf "Zathura")
-     ((output-dvi has-no-display-manager)
-      "dvi2tty")
-     ((output-dvi style-pstricks)
-      "dvips and gv")
-     (output-dvi "xdvi")
-     (output-pdf "Evince")
-     (output-html "xdg-open"))))
- '(custom-enabled-themes (quote (leuven)))
- '(org-agenda-files (quote ("~/org/gtd.org")))
- '(org-modules
-   (quote
-    (org-habit org-w3m org-bbdb org-bibtex org-docview org-gnus org-info org-irc org-mhe org-rmail)))
- '(package-selected-packages
-   (quote
-    (dart-mode csv-mode emms go-mode typescript-mode magit-todos flx-ido helm-unicode tramp anki-editor use-package dictcc zetteldeft yasnippet-snippets yasnippet-classic-snippets yaml-mode which-key terminal-here tagedit smex slime-repl slim-mode skewer-mode rust-mode rainbow-delimiters projectile plantuml-mode paredit org-roam org-ref org-gcal org-cliplink magit lsp-mode ledger-mode julia-mode ido-completing-read+ haskell-mode graphviz-dot-mode geiser folding flycheck ein company clojure-mode-extra-font-locking cider auto-dictionary auctex))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+;; enable languages for org babel
+(org-babel-do-load-languages
+  'org-babel-load-languages
+  '((emacs-lisp . t)
+    (R . t)
+    (python . t)))
+
+
+
+;; macro for opening zathura
+(fset 'open-zathura
+   [?& ?z ?a ?t ?h tab return ?\C-x ?1])
 
 
 ;; set org capture template
 (setq org-capture-templates
-      '(("t" "Todo" entry (file+headline "~/org/gtd.org" "Inbox")
+      '(("i" "Inbox" entry (file+headline "~/Nextcloud/org/gtd.org" "Inbox")
          "* %?")))
 
 ;; set org capture template
 (add-to-list 'org-capture-templates
-             '("m" "media inbox"
+             '("n" "next action"
                entry
-               (file+headline "~/org/gtd.org" "Media Inbox")
-               "* %?"))
-
-(add-to-list 'org-capture-templates
-             '("a" "anki inbox"
-               entry
-               (file+headline "~/org/gtd.org" "Anki inbox")
+               (file+headline "~/Nextcloud/org/gtd.org" "Next Action")
                "* %?"))
 (add-to-list 'org-capture-templates
-             '("f" "food tracking"
+             '("s" "slack"
                entry
-               (file+headline "~/org/quantified_self.org" "Daily Food")
-               "* %t %?"))
-(add-to-list 'org-capture-templates
-             '("w" "body Weight tracking"
-               entry
-               (file+headline "~/org/quantified_self.org" "Body weight")
-               "* %t %?"))
-(add-to-list 'org-capture-templates
-             '("h" "Happiness + General well-being"
-               entry
-               (file+headline "~/org/quantified_self.org" "Happiness + General well-being")
-               "* %t \n %?"))
-(add-to-list 'org-capture-templates
-             '("g" "Gratitude"
-               entry
-               (file "~/org/gratitude.org")
-               "* %t \n %?"))
+               (file+headline "~/Nextcloud/org/gtd.org" "Someday / Slack time")
+               "* %?"))
 
-;; fix org-mode
-(org-reload)
+(setq org-refile-targets '(
+   (nil :maxlevel . 2)             ; refile to headings in the current buffer
+   (org-agenda-files :maxlevel . 2) ; refile to any of these files
+    ))
 
-(require 'emms-setup)
-     (emms-all)
-(emms-default-players)
-(setq emms-player-list '(emms-player-mpv))
-(setq emms-source-file-default-directory "/home/philipp/media/music/")
+;; irc client
+;;erc package
 
 
-(defun yank-buffer ()
- "Nonce function"
- (interactive)
- (kill-new buffer-file-name))
+;; Use IPython for REPL
+(setq python-shell-interpreter "jupyter"
 
-;; moving files with dired
-(setq dired-dwim-target t)
+      python-shell-interpreter-args "console --simple-prompt"
+
+      python-shell-prompt-detect-failure-warning nil)
+
+(add-to-list 'python-shell-completion-native-disabled-interpreters
+
+             "jupyter")
 
 
-;; stop projectile from slowing down tramp
-(defadvice projectile-on (around exlude-tramp activate)
-  "This should disable projectile when visiting a remote file"
-  (unless  (--any? (and it (file-remote-p it))
-                   (list
-                    (buffer-file-name)
-                    list-buffers-directory
-                    default-directory
-                    dired-directory))
-    ad-do-it))
+;; weird indentation when editing java files
+;; from https://www.emacswiki.org/emacs/IndentingJava
+(add-hook 'java-mode-hook (lambda ()
+                                (setq c-basic-offset 4
+                                      tab-width 4
+                                      indent-tabs-mode t)))
 
-(setq projectile-mode-line "Projectile")
+;; Auto refresh buffers
+(global-auto-revert-mode 1)
 
-(defun insert-date()
-  (interactive)
-  (insert (shell-command-to-string "date +\"%d.%m.%Y %k:%M\"")))
+;; Also auto refresh dired, but be quiet about it
+(setq global-auto-revert-non-file-buffers t)
+(setq auto-revert-verbose nil)
