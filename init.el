@@ -36,10 +36,15 @@
 ;; Load my favorite theme
 ;; (load-theme 'doom-nord t)
 (load-theme 'leuven t)
+;; (load-theme 'zenburn t)
 ;; (load-theme 'doom-moonlight t)
 
 ;; Start server to use emacsclient
 ;; (server-start)
+
+;; ensure same path in emacs as in shell
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
 
 
 ;; Who I am
@@ -47,7 +52,7 @@
 (setq user-mail-address "p.theyssen@gmail.com")
 
 ;; Let's get a backtrace when errors are
-(setq debug-on-error t)
+;; (setq debug-on-error t)
 
 ;; Display byte-compiler warnings on error
 (setq byte-compile-debug t)
@@ -66,10 +71,11 @@
 
 
 ;; initial buffer choice
-(setq initial-buffer-choice "~/Nextcloud/org/gtd.org")
+;; (setq initial-buffer-choice "~/Nextcloud/org/gtd.org")
 
 ;; set font size
-(set-face-attribute 'default nil :height 110)
+(set-face-attribute 'default nil :height 120)
+;; (set-face-attribute 'default nil :height 80)
 
 ;; Highlights matching parenthesis
 (show-paren-mode 1)
@@ -161,8 +167,6 @@
 (global-set-key (kbd "C-c l") 'org-cliplink)
 (global-set-key (kbd "C-c d") 'dictcc)
 (global-set-key (kbd "C-x p") 'dictcc-at-point)
-(global-set-key (kbd "C-c f") 'org-roam-find-file)
-(global-set-key (kbd "C-c i") 'org-roam-insert)
 (global-set-key (kbd "C-.") 'toggle-comment-on-line)
 (global-set-key (kbd "M-o") 'mode-line-other-buffer)
 (global-set-key (kbd "C-ö") 'ido-next-match)
@@ -174,11 +178,12 @@
 (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup)
 (global-set-key (kbd "C-c v") 'visual-line-mode)
 (global-set-key (kbd "C-c u") 'unipoint-insert)
+(global-set-key (kbd "C-c C-r") 'fill-region)
 (global-set-key (kbd "C-c c") 'org-capture)
 (global-set-key (kbd "C-c c") 'org-capture)
-(global-set-key (kbd "C-h") 'delete-backward-char)
-(global-set-key (kbd "M-h") 'backward-kill-word)
-(global-set-key (kbd "C-?") 'help-command)
+;; (global-set-key (kbd "C-h") 'delete-backward-char)
+;; (global-set-key (kbd "M-h") 'backward-kill-word)
+;; (global-set-key (kbd "C-?") 'help-command)
 (global-set-key (kbd "M-i") 'imenu)
 (global-set-key (kbd "C-c s") 'ispell)
 (global-set-key (kbd "<f12>") 'terminal-here)
@@ -190,14 +195,22 @@
 (global-set-key (kbd "M-p") (kbd "C-u 1 M-v"))
 (global-set-key (kbd "C-x C-b") 'ibuffer)
 (global-set-key (kbd "C-x c") 'helm-command-prefix-key)
-(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+(define-key global-map (kbd "C-c SPC") 'ace-jump-char-mode)
 (global-set-key (kbd "M-q") 'ace-window)
-(global-set-key (kbd "<f11>") 'shell)
+;; (global-set-key (kbd "<f11>") 'shell)
+(global-set-key (kbd "<f11>") 'deft)
+(global-set-key (kbd "<f7>") 'calendar)
 (global-set-key (kbd "<f9>") 'delete-trailing-whitespace)
 (global-set-key (kbd "<f10>") 'org-agenda)
 (global-set-key (kbd "<f8>") 'deft)
 (global-set-key (kbd "C-c b") 'open-org)
 (global-set-key (kbd "C-c z") 'open-zathura)
+(global-set-key (kbd "C-c g") 'open-gimp)
+(global-set-key (kbd "M-j")
+            (lambda ()
+                  (interactive)
+                  (join-line -1)))
+
 
 
 ;; dired mode key bindings https://stackoverflow.com/questions/24567313/remap-key-bindings-for-dired-mode
@@ -273,7 +286,7 @@
   :config
   (setq deft-extensions '("org" "txt"))
   (setq deft-use-filter-string-for-filename t)
-  (setq deft-directory "~/Nextcloud/org/deft_notes"))
+  (setq deft-directory "~/Nextcloud/org/zettelkasten"))
 (use-package doom-themes)
 (use-package company)
 (use-package ace-window)
@@ -281,15 +294,13 @@
 (use-package which-key)
 (use-package volatile-highlights)
 (use-package plantuml-mode)
+(use-package writeroom-mode)
 (use-package ido-completing-read+)
 
-(use-package pomidor
-  :config
-  (setq pomidor-seconds (* 25 60)) ; 25 minutes for the work period
-  (setq pomidor-break-seconds (* 5 60)) ; 5 minutes break time
-  (setq pomidor-sound-tick nil)
-  (setq pomidor-sound-tack nil) 
-)
+(use-package eglot :ensure t)
+(add-to-list 'eglot-server-programs '((c++-mode c-mode) "clangd-10"))
+(add-hook 'c-mode-hook 'eglot-ensure)
+(add-hook 'c++-mode-hook 'eglot-ensure)
 
 ;; pdf-tools
 (pdf-loader-install)
@@ -333,13 +344,21 @@
    (concat "# " (shell-command-to-string "date +\"%d.%m.%Y %k:%M\""))))
 
 
+;; Avoid stale dired buffers
+;; Auto refresh buffers
+(global-auto-revert-mode 1)
+
+;; Also auto refresh dired, but be quiet about it
+(setq global-auto-revert-non-file-buffers t)
+(setq auto-revert-verbose nil)
+
 ;; README via pandoc + github css style
 (add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode))
 (setq markdown-command "pandoc -c file:///home/philipp/.emacs.d/github-pandoc.css --from gfm -t html5 --mathjax --highlight-style pygments --standalone")
 
 
-(setq memento-mori-birth-date "1998-03-01")
-(memento-mori-mode)
+;; (setq memento-mori-birth-date "1998-03-01")
+;; (memento-mori-mode)
 
 (ido-mode 1)
 (ido-everywhere 1)
@@ -382,31 +401,27 @@
   'org-babel-load-languages
   '((emacs-lisp . t)
     (R . t)
+    (shell . t)
+    (haskell . t)        
     (python . t)))
 
+(setq org-babel-python-command "python3")
 
+(setq org-src-tab-acts-natively t)
 
 ;; macro for opening zathura
 (fset 'open-zathura
    [?& ?z ?a ?t ?h tab return ?\C-x ?1])
 
+(fset 'open-gimp
+   [?& ?g ?i ?m ?p return ?\C-x ?1])
+
+(setq frame-title-format "%f")
 
 ;; set org capture template
 (setq org-capture-templates
       '(("i" "Inbox" entry (file+headline "~/Nextcloud/org/gtd.org" "Inbox")
          "* %?")))
-
-;; set org capture template
-(add-to-list 'org-capture-templates
-             '("n" "next action"
-               entry
-               (file+headline "~/Nextcloud/org/gtd.org" "Next Action")
-               "* %?"))
-(add-to-list 'org-capture-templates
-             '("s" "slack"
-               entry
-               (file+headline "~/Nextcloud/org/gtd.org" "Someday / Slack time")
-               "* %?"))
 
 (setq org-refile-targets '(
    (nil :maxlevel . 2)             ; refile to headings in the current buffer
@@ -439,6 +454,79 @@
 ;; Auto refresh buffers
 (global-auto-revert-mode 1)
 
+(setq c-basic-offset 4)
+;; use org-mode for txt files
+(add-to-list 'auto-mode-alist '("\\.txt\\'" . org-mode))
+(add-to-list 'auto-mode-alist '("\\.dcr\\'" . text-mode))
+
 ;; Also auto refresh dired, but be quiet about it
 (setq global-auto-revert-non-file-buffers t)
 (setq auto-revert-verbose nil)
+
+
+;; org-roam config
+(setq org-roam-directory (file-truename "~/Nextcloud/org/zettelkasten"))
+(setq find-file-visit-truename t)
+;; display inline images always!
+(setq org-startup-with-inline-images t)
+;; set default width of images
+(setq org-image-actual-width (list 450))
+(org-roam-db-autosync-mode)
+(global-set-key (kbd "C-c f") 'org-roam-node-find)
+(global-set-key (kbd "C-c i") 'org-roam-node-insert)
+
+
+;; elfeed
+;; Somewhere in your .emacs file
+;; https://osf.io/preprints/
+(setq elfeed-feeds
+      '("https://lobste.rs/rss"
+        "http://arxiv.org/rss/cs"
+        "https://www.youtube.com/simonsinstitute"
+        "http://arxiv.org/rss/physics"
+        "http://arxiv.org/rss/q-bio"
+        "https://www.lesswrong.com/feed.xml"
+        "http://arxiv.org/rss/q-fin"
+        "http://arxiv.org/rss/stat"
+        "http://arxiv.org/rss/eess"
+        "http://arxiv.org/rss/econ"
+        "https://blog.fefe.de/rss.xml"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=605c72ef153207001f6470d0"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=605c72ef153207001f6470d5"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=605c72ef153207001f6470dd"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=605c72ef153207001f6470da"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=605c72ef153207001f6470d9"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=605c72ef153207001f6470db"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=60b63c9f57d3ab002262a6f7"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=605c72ef153207001f6470d2"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=605c72ef153207001f6470d8"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=605c72ef153207001f6470d1"
+        "https://chemrxiv.org/engage/rss/chemrxiv?categoryId=605c72ef153207001f6470d1"
+        "http://connect.biorxiv.org/biorxiv_xml.php?subject=all"
+        "https://pubmed.ncbi.nlm.nih.gov/rss/search/1XsgQGan4PZ5SVUmkCmlRCQWI7bRcS27BU6X9zs4mgvF7h_ol6/?limit=15&utm_campaign=pubmed-2&fc=20230716065139"
+        "https://news.ycombinator.com/rss"
+        ))
+
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(org-agenda-files
+   (quote
+    ("~/Nextcloud/org/gtd.org" "~/Nextcloud/Notes/agenda.txt")))
+ '(package-selected-packages
+   (quote
+    (elfeed google-translate emacsql ereader lua-mode darkroom fsharp-mode scala-mode csharp-mode cuda-mode adoc-mode futhark-mode json-mode eglot company-lean lean-mode unipoint erlang-mode pdf-tools multiple-cursors deft flutter all-the-icons-completion erlang helm yasnippet-snippets yasnippet-classic-snippets yaml-mode writeroom-mode wiki-summary whole-line-or-region which-key volatile-highlights use-package typescript-mode tramp terminal-here tagedit spray smex slime-repl slim-mode skewer-mode rust-mode rainbow-delimiters projectile pomidor plantuml-mode org-roam org-ref org-gcal org-cliplink nasm-mode memento-mori magit-todos lsp-mode ledger-mode jupyter julia-mode ido-completing-read+ helm-wikipedia helm-unicode haskell-mode graphviz-dot-mode go-mode geiser folding flycheck flx-ido exec-path-from-shell evil-numbers ess emms elpher elfeed-org ein doom-themes dictcc dart-mode csv-mode company clojure-snippets clojure-mode-extra-font-locking clj-refactor auto-dictionary auctex anki-editor ace-window ace-jump-mode))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+(put 'dired-find-alternate-file 'disabled nil)
+
+;; (load-file (let ((coding-system-for-read 'utf-8))
+                ;; (shell-command-to-string "agda-mode locate")))
+;; (load-file "/home/pt/.cabal/store/ghc-9.2.4/Agda-2.6.2.2-e222571990d1912053f6135a206a8e1650b0a85840ab390825a19dd97a77f70b/share/emacs-mode/agda2.el")
